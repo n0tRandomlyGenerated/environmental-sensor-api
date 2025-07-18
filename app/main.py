@@ -30,10 +30,10 @@ def setup_timescaleDB():
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS timescaledb;"))
         conn.execute(text("SELECT create_hypertable('sensor_data', 'timestamp', if_not_exists => true, migrate_data => true);"))
         conn.execute(text("COMMIT;"))
-
-    Base.metadata.create_all(bind=engine)
     print("✅ DB and TimescaleDB ready")
 
+
+Base.metadata.create_all(bind=engine)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("⏳ Starting up...")
