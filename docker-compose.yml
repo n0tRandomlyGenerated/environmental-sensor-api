@@ -1,0 +1,49 @@
+services:
+  db:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: env_sensor_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data #
+    command:
+      [
+        "-D",
+        "/var/lib/postgresql/data",
+        "-c",
+        "shared_preload_libraries=timescaledb",
+      ]
+
+  app:
+    build: .
+    command: sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://admin:secret@db/env_sensor_db
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+
+  grafana:
+    image: grafana/grafana
+    container_name: dar-sensor-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
+    name: dar-sensor-app_pgdata
+  grafana_data:
+    name: dar-sensor-app_grafana
